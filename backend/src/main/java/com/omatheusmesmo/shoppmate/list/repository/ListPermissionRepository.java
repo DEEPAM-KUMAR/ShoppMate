@@ -6,10 +6,14 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ListPermissionRepository extends JpaRepository<ListPermission, Long> {
 
     @EntityGraph(attributePaths = {"user"})
     List<ListPermission> findByShoppingListIdAndDeletedFalse(Long id);
+
+    @EntityGraph(attributePaths = {"user", "shoppingList", "shoppingList.owner"})
+    Optional<ListPermission> findByIdAndDeletedFalse(Long id);
 }

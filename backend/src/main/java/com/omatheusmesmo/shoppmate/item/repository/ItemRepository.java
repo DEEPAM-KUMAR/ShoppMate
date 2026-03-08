@@ -16,4 +16,7 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
 
     @EntityGraph(attributePaths = {"category", "unit"})
     Optional<Item> findById(Long id);
+
+    @EntityGraph(attributePaths = {"category", "unit"})
+    Optional<Item> findByIdAndDeletedFalse(Long id);
 }
