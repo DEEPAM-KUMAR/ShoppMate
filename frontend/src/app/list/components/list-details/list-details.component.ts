@@ -3,6 +3,7 @@ import {
   Component,
   OnInit,
   inject,
+  signal,
 } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
@@ -19,7 +20,8 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { AsyncPipe } from '@angular/common';
 import { FormBuilder } from '@angular/forms';
-import { finalize, map, Observable, tap } from 'rxjs';
+import { finalize, map, Observable } from 'rxjs';
+import { ListItemDialogComponent } from './list-item-dialog/list-item-dialog.component';
 
 import { ListItemService } from '../../../shared/services/list-item.service';
 import { ItemService } from '../../../shared/services/item.service';
@@ -58,7 +60,7 @@ export class ListDetailsComponent implements OnInit {
   private fb = inject(FormBuilder);
 
   listId!: number;
-  loading = true;
+  readonly loading = signal(true);
   list$!: Observable<ShoppingListResponseDTO>;
   listItems$!: Observable<ListItemResponseDTO[]>;
   displayedColumns: string[] = ['item', 'quantity', 'status', 'actions'];
@@ -69,7 +71,7 @@ export class ListDetailsComponent implements OnInit {
   }
 
   loadData(): void {
-    this.loading = true;
+    this.loading.set(true);
 
     // Get the list details
     this.list$ = this.shoppingListService
@@ -79,10 +81,7 @@ export class ListDetailsComponent implements OnInit {
     // Get list items
     this.listItems$ = this.listItemService
       .getAllListItemsByListId(this.listId)
-      .pipe(
-        tap(() => (this.loading = false)),
-        finalize(() => (this.loading = false)),
-      );
+      .pipe(finalize(() => this.loading.set(false)));
   }
 
   togglePurchased(item: ListItemResponseDTO): void {
@@ -97,8 +96,7 @@ export class ListDetailsComponent implements OnInit {
       .updateListItem(this.listId, item.idListItem, updatedItem)
       .subscribe({
         next: () => this.loadData(),
-        error: (error) => {
-          console.error('Error updating item status:', error);
+        error: () => {
           this.snackBar.open('Erro ao atualizar status do item', 'Fechar', {
             duration: 3000,
           });
@@ -107,13 +105,55 @@ export class ListDetailsComponent implements OnInit {
   }
 
   openAddItemDialog(): void {
-    // Implementar posteriormente com um dialog
-    console.log('Add item dialog should open here');
+    const dialogRef = this.dialog.open(ListItemDialogComponent, {
+      width: '400px',
+      data: { listId: this.listId },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.listItemService.addListItem(this.listId, result).subscribe({
+          next: () => {
+            this.loadData();
+            this.snackBar.open('Item adicionado com sucesso', 'Fechar', {
+              duration: 3000,
+            });
+          },
+          error: () => {
+            this.snackBar.open('Erro ao adicionar item', 'Fechar', {
+              duration: 3000,
+            });
+          },
+        });
+      }
+    });
   }
 
   editItem(item: ListItemResponseDTO): void {
-    // Implementar posteriormente
-    console.log('Edit item:', item);
+    const dialogRef = this.dialog.open(ListItemDialogComponent, {
+      width: '400px',
+      data: { listItem: item, listId: this.listId },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.listItemService
+          .updateListItem(this.listId, item.idListItem, result)
+          .subscribe({
+            next: () => {
+              this.loadData();
+              this.snackBar.open('Item atualizado com sucesso', 'Fechar', {
+                duration: 3000,
+              });
+            },
+            error: () => {
+              this.snackBar.open('Erro ao atualizar item', 'Fechar', {
+                duration: 3000,
+              });
+            },
+          });
+      }
+    });
   }
 
   removeItem(item: ListItemResponseDTO): void {
@@ -127,8 +167,7 @@ export class ListDetailsComponent implements OnInit {
               duration: 3000,
             });
           },
-          error: (error) => {
-            console.error('Error removing item:', error);
+          error: () => {
             this.snackBar.open('Erro ao remover item', 'Fechar', {
               duration: 3000,
             });

@@ -2,7 +2,7 @@
   <mat-card class="form-card">
     <mat-card-header>
       <mat-card-title>{{
-        editingListItemId ? "Edit Item in List" : "Add Item to List"
+        editingListItemId() ? "Edit Item in List" : "Add Item to List"
       }}</mat-card-title>
     </mat-card-header>
     <mat-card-content>
@@ -42,6 +42,23 @@
           }
         </mat-form-field>
 
+        <mat-form-field appearance="outline">
+          <mat-label>Unit Price</mat-label>
+          <input matInput type="number" formControlName="unitPrice" min="0" />
+          @if (
+            listItemForm.get("unitPrice")?.errors?.["required"] &&
+            listItemForm.get("unitPrice")?.touched
+          ) {
+            <mat-error>Unit price is required</mat-error>
+          }
+          @if (
+            listItemForm.get("unitPrice")?.errors?.["min"] &&
+            listItemForm.get("unitPrice")?.touched
+          ) {
+            <mat-error>Unit price must be at least 0</mat-error>
+          }
+        </mat-form-field>
+
         <div class="form-actions">
           <button
             mat-raised-button
@@ -49,9 +66,9 @@
             type="submit"
             [disabled]="listItemForm.invalid"
           >
-            {{ editingListItemId ? "Update" : "Add" }}
+            {{ editingListItemId() ? "Update" : "Add" }}
           </button>
-          @if (editingListItemId) {
+          @if (editingListItemId()) {
             <button mat-button type="button" (click)="resetForm()">
               Cancel
             </button>
@@ -61,25 +78,38 @@
     </mat-card-content>
   </mat-card>
 
-  @if (isLoading) {
+  @if (isLoading()) {
     <div class="loading-spinner">
       <mat-spinner></mat-spinner>
     </div>
-  } @else if (listItems.length === 0) {
+  } @else if (listItems().length === 0) {
     <mat-card class="empty-state">
       <mat-card-content>
         <p>No items in this list</p>
       </mat-card-content>
     </mat-card>
   } @else {
+    <mat-card class="list-summary-card">
+      <mat-card-content>
+        <div class="summary-row">
+          <span class="summary-label">Total List Value:</span>
+          <span class="summary-value">{{
+            listItems[0].shoppingList.totalValue | currency
+          }}</span>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
     <div class="list-items-grid">
-      @for (listItem of listItems; track listItem.idListItem) {
+      @for (listItem of listItems(); track listItem.idListItem) {
         <mat-card class="list-item-card" [class.purchased]="listItem.purchased">
           <mat-card-header>
             <mat-card-title>{{ listItem.item.name }}</mat-card-title>
             <mat-card-subtitle>
-              {{ listItem.quantity }} {{ listItem.item.unit.symbol }} |
-              Category: {{ listItem.item.category.name }}
+              {{ listItem.quantity }} {{ listItem.item.unit.symbol }} x
+              {{ listItem.unitPrice | currency }} =
+              {{ listItem.totalPrice | currency }} | Category:
+              {{ listItem.item.category.name }}
             </mat-card-subtitle>
           </mat-card-header>
           <mat-card-actions>

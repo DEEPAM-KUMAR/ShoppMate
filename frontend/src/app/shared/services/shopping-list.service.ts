@@ -1,13 +1,14 @@
 import { environment } from '../../../environments/environment';
-import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import {
   ShoppingListResponseDTO,
   ShoppingListRequestDTO,
-  ListItemResponseDTO,
-  ListItemRequestDTO,
 } from '../interfaces/shopping-list.interface';
+import {
+  ListItemRequestDTO,
+  ListItemResponseDTO,
+} from '../interfaces/list-item.interface';
 import { catchError } from 'rxjs/operators';
 import { BaseService } from './base.service';
 
@@ -17,7 +18,7 @@ import { BaseService } from './base.service';
 export class ShoppingListService extends BaseService {
   private apiUrl = `${environment.apiUrl}/lists`;
 
-  constructor(override http: HttpClient) {
+  constructor() {
     super();
   }
 

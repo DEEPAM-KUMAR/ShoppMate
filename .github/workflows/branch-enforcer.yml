@@ -1,8 +1,8 @@
 name: External PR Branch Enforcer
 
 on:
-  pull_request:
-    types: [opened, edited, synchronize]
+  pull_request_target:
+    types: [opened, edited, synchronize, reopened]
 
 permissions:
   pull-requests: write
@@ -25,12 +25,15 @@ jobs:
               const author = pr.user.login;
               const association = pr.author_association;
               
+              console.log(`Checking PR #${pr.number} by @${author} (${association})`);
+              console.log(`Source: ${sourceBranch} -> Target: ${targetBranch}`);
+
               const isOwner = association === 'OWNER';
 
               // Rule: Only Owner can target 'main', and it MUST come from 'develop'
               if (targetBranch === 'main') {
                 if (!isOwner || sourceBranch !== 'develop') {
-                  console.log(`⚠️ Redirecting PR #${pr.number} from ${targetBranch} to develop. Reason: Restricted access or invalid source branch.`);
+                  console.log(`⚠️ Redirecting PR #${pr.number} from ${targetBranch} to develop.`);
                   
                   let message = `🤖 **Attention @${author}!** `;
                   if (!isOwner) {
@@ -40,6 +43,15 @@ jobs:
                   }
                   message += ` I've automatically updated your PR to target 'develop' instead. Thank you! 🚀`;
 
+                  // Update the PR base branch first
+                  await github.rest.pulls.update({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    pull_number: pr.number,
+                    base: 'develop'
+                  });
+
+                  // Then comment
                   await github.rest.issues.createComment({
                     owner: context.repo.owner,
                     repo: context.repo.repo,
@@ -47,14 +59,12 @@ jobs:
                     body: message
                   });
                   
-                  await github.rest.pulls.update({
-                    owner: context.repo.owner,
-                    repo: context.repo.repo,
-                    pull_number: pr.number,
-                    base: 'develop'
-                  });
+                  console.log(`✅ Successfully redirected PR #${pr.number} to develop.`);
+                } else {
+                  console.log(`✅ PR #${pr.number} is valid (Owner targeting main from develop).`);
                 }
               }
             } catch (error) {
               console.error("❌ Error processing branch enforcement:", error);
+              core.setFailed(error instanceof Error ? error.message : String(error));
             }

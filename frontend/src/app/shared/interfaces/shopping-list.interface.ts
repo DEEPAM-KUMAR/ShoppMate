@@ -18,20 +18,7 @@ export interface ShoppingListResponseDTO {
   idList: number;
   listName: string;
   owner: UserResponseDTO;
-}
-
-export interface ListItemResponseDTO {
-  shoppingList: ShoppingListResponseDTO;
-  item: ItemResponseDTO;
-  idListItem: number;
-  quantity: number;
-  purchased: boolean;
-}
-
-export interface ListItemRequestDTO {
-  listId: number;
-  itemId: number;
-  quantity?: number;
+  totalValue: number;
 }
 
 export interface CategoryResponseDTO {

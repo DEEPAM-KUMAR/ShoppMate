@@ -3,6 +3,7 @@ import {
   Component,
   OnInit,
   inject,
+  signal,
 } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -55,10 +56,10 @@ export class ItemsManagementComponent implements OnInit {
   private snackBar = inject(MatSnackBar);
   private fb = inject(FormBuilder);
 
-  loading = true;
+  readonly loading = signal(true);
   items$!: Observable<ItemResponseDTO[]>;
-  categories: Category[] = [];
-  units: Unit[] = [];
+  readonly categories = signal<Category[]>([]);
+  readonly units = signal<Unit[]>([]);
   displayedColumns: string[] = ['name', 'category', 'unit', 'actions'];
 
   ngOnInit(): void {
@@ -66,23 +67,43 @@ export class ItemsManagementComponent implements OnInit {
   }
 
   loadData(): void {
-    this.loading = true;
+    this.loading.set(true);
     this.items$ = this.itemService
       .getAllItems()
-      .pipe(finalize(() => (this.loading = false)));
+      .pipe(finalize(() => this.loading.set(false)));
 
     this.categoryService.getAllCategories().subscribe((categories) => {
-      this.categories = categories;
+      this.categories.set(categories);
     });
 
     this.unitService.getAllUnits().subscribe((units) => {
-      this.units = units;
+      this.units.set(units);
     });
   }
 
   openAddItemDialog(): void {
-    // Implementar posteriormente com um dialog
-    console.log('Add item dialog should open here');
+    const dialogRef = this.dialog.open(ItemDialogComponent, {
+      width: '400px',
+      data: { item: null },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.itemService.addItem(result).subscribe({
+          next: () => {
+            this.loadData();
+            this.snackBar.open('Item adicionado com sucesso', 'Fechar', {
+              duration: 3000,
+            });
+          },
+          error: () => {
+            this.snackBar.open('Erro ao adicionar item', 'Fechar', {
+              duration: 3000,
+            });
+          },
+        });
+      }
+    });
   }
 
   editItem(item: ItemResponseDTO): void {
@@ -125,8 +146,7 @@ export class ItemsManagementComponent implements OnInit {
             duration: 3000,
           });
         },
-        error: (error) => {
-          console.error('Error deleting item:', error);
+        error: () => {
           this.snackBar.open('Erro ao excluir item', 'Fechar', {
             duration: 3000,
           });

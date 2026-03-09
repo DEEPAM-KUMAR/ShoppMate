@@ -1,6 +1,19 @@
-import { ChangeDetectionStrategy, Component, Inject } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  inject,
+  signal,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import {
+  FormBuilder,
+  ReactiveFormsModule,
+  Validators,
+  AbstractControl,
+  ValidationErrors,
+  ValidatorFn,
+} from '@angular/forms';
 import {
   MatDialogModule,
   MatDialogRef,
@@ -10,65 +23,87 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { Unit } from '../../../../shared/interfaces/unit.interface';
+import { UnitService } from '../../../../shared/services/unit.service';
+import { MatSnackBar } from '@angular/material/snack-bar';
+
+export function duplicateNameValidator(
+  existingNames: string[],
+  originalName?: string,
+): ValidatorFn {
+  return (control: AbstractControl): ValidationErrors | null => {
+    if (!control.value) return null;
+    const name = control.value.trim().toLowerCase();
+    if (originalName && name === originalName.trim().toLowerCase()) return null;
+    return existingNames.some(
+      (existingName) => existingName.trim().toLowerCase() === name,
+    )
+      ? { duplicateName: true }
+      : null;
+  };
+}
 
 @Component({
   selector: 'app-unit-dialog',
   standalone: true,
   imports: [
     CommonModule,
-    FormsModule,
+    ReactiveFormsModule,
     MatDialogModule,
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
   ],
-  template: `
-    <h2 mat-dialog-title>{{ data.unit ? 'Editar' : 'Nova' }} Unidade</h2>
-    <mat-dialog-content>
-      <mat-form-field appearance="outline" class="w-100">
-        <mat-label>Nome</mat-label>
-        <input matInput [(ngModel)]="unit.name" required />
-      </mat-form-field>
-      <mat-form-field appearance="outline" class="w-100">
-        <mat-label>Símbolo</mat-label>
-        <input matInput [(ngModel)]="unit.symbol" required />
-      </mat-form-field>
-    </mat-dialog-content>
-    <mat-dialog-actions align="end">
-      <button mat-button (click)="onCancel()">Cancelar</button>
-      <button
-        mat-raised-button
-        color="primary"
-        (click)="onSave()"
-        [disabled]="!unit.name || !unit.symbol"
-      >
-        Salvar
-      </button>
-    </mat-dialog-actions>
-  `,
-  styles: [
-    `
-      .w-100 {
-        width: 100%;
-        margin-bottom: 1rem;
-      }
-    `,
-  ],
+  templateUrl: './unit-dialog.component.html',
+  styleUrls: ['./unit-dialog.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class UnitDialogComponent {
-  unit: Unit = {
-    name: '',
-    symbol: '',
-  };
+export class UnitDialogComponent implements OnInit {
+  private readonly fb = inject(FormBuilder);
+  private readonly unitService = inject(UnitService);
+  private readonly snackBar = inject(MatSnackBar);
+  readonly dialogRef = inject(MatDialogRef<UnitDialogComponent>);
+  readonly data = inject(MAT_DIALOG_DATA) as { unit?: Unit };
 
-  constructor(
-    public dialogRef: MatDialogRef<UnitDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { unit?: Unit },
-  ) {
-    if (data.unit) {
-      this.unit = { ...data.unit };
+  readonly unitForm = this.fb.group({
+    name: ['', [Validators.required]],
+    symbol: ['', [Validators.required]],
+  });
+
+  readonly existingUnits = signal<Unit[]>([]);
+
+  ngOnInit(): void {
+    if (this.data.unit) {
+      this.unitForm.patchValue(this.data.unit);
     }
+    this.loadUnits();
+  }
+
+  loadUnits(): void {
+    this.unitService.getAllUnits().subscribe({
+      next: (units) => {
+        this.existingUnits.set(units);
+        this.updateNameValidator();
+      },
+      error: () => {
+        this.snackBar.open(
+          'Erro ao carregar unidades para validação',
+          'Fechar',
+          {
+            duration: 3000,
+          },
+        );
+      },
+    });
+  }
+
+  updateNameValidator(): void {
+    const names = this.existingUnits().map((u) => u.name);
+    const originalName = this.data.unit ? this.data.unit.name : undefined;
+
+    this.unitForm
+      .get('name')
+      ?.addValidators(duplicateNameValidator(names, originalName));
+    this.unitForm.get('name')?.updateValueAndValidity();
   }
 
   onCancel(): void {
@@ -76,6 +111,11 @@ export class UnitDialogComponent {
   }
 
   onSave(): void {
-    this.dialogRef.close(this.unit);
+    if (this.unitForm.valid) {
+      this.dialogRef.close({
+        ...this.data.unit,
+        ...this.unitForm.value,
+      });
+    }
   }
 }

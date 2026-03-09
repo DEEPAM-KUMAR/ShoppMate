@@ -6,19 +6,14 @@ import com.nimbusds.jose.JWEAlgorithm;
 import com.nimbusds.jose.JWEHeader;
 import com.nimbusds.jose.crypto.RSADecrypter;
 import com.nimbusds.jose.crypto.RSAEncrypter;
-import com.nimbusds.jose.crypto.RSASSAVerifier;
 import com.nimbusds.jwt.EncryptedJWT;
 import com.nimbusds.jwt.JWTClaimsSet;
-import com.nimbusds.jwt.SignedJWT;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.NoSuchAlgorithmException;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.text.ParseException;
@@ -30,20 +25,18 @@ public class JwtService {
 
     private static final Logger logger = LoggerFactory.getLogger(JwtService.class);
 
-    private final RSAPrivateKey privateKey;
-    private final RSAPublicKey publicKey;
     private final RSAEncrypter encrypter;
     private final RSADecrypter decrypter;
+    private final long tokenExpiration;
 
-    @Value("${jwt.token.expiration}")
-    private long tokenExpiration;
-
-    public JwtService() {
-        KeyPair keyPair = generateRSAKeys();
-        this.privateKey = (RSAPrivateKey) keyPair.getPrivate();
-        this.publicKey = (RSAPublicKey) keyPair.getPublic();
+    public JwtService(
+            RSAPublicKey publicKey,
+            RSAPrivateKey privateKey,
+            @Value("${jwt.token.expiration}") long tokenExpiration) {
         this.encrypter = new RSAEncrypter(publicKey);
         this.decrypter = new RSADecrypter(privateKey);
+        this.tokenExpiration = tokenExpiration;
+        logger.info("RSA keys loaded successfully for JWE token operations");
     }
 
     public String generateToken(UserDetails userDetails) {
@@ -56,7 +49,7 @@ public class JwtService {
             encryptedJWT.encrypt(encrypter);
             return encryptedJWT;
         } catch (JOSEException e) {
-            logger.error("Failed to encrypt token", e);
+            logger.error("Failed to encrypt token for user: {}", userDetails.getUsername(), e);
             throw new JwtServiceException("Failed to encrypt token", e);
         }
     }
@@ -81,19 +74,15 @@ public class JwtService {
             return true;
 
         } catch (ParseException e) {
-
             logger.error("Failed to parse JWT token string during validation: {}", e.getMessage());
             return false;
         } catch (JOSEException e) {
-
             logger.error("Failed to decrypt JWT token during validation: {}", e.getMessage());
             return false;
         } catch (JwtServiceException e) {
-
             logger.error("JWT Service Exception during validation: {}", e.getMessage());
             return false;
         } catch (Exception e) {
-
             logger.error("Unexpected error during JWT validation: {}", e.getMessage(), e);
             return false;
         }
@@ -105,11 +94,9 @@ public class JwtService {
             encryptedJWT.decrypt(decrypter);
             return encryptedJWT.getJWTClaimsSet();
         } catch (ParseException e) {
-
             logger.error("Failed to parse token string: {}", e.getMessage());
             throw e;
         } catch (JOSEException e) {
-
             logger.error(
                     "Failed to decrypt token. Check if the correct private key is used and token format is valid. Error: {}",
                     e.getMessage());
@@ -139,17 +126,6 @@ public class JwtService {
         return new JWTClaimsSet.Builder().subject(userDetails.getUsername())
                 .expirationTime(new Date(new Date().getTime() + tokenExpiration)).notBeforeTime(new Date())
                 .jwtID(UUID.randomUUID().toString()).build();
-    }
-
-    public KeyPair generateRSAKeys() {
-        try {
-            KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
-            keyPairGenerator.initialize(2048);
-            return keyPairGenerator.genKeyPair();
-        } catch (NoSuchAlgorithmException e) {
-            logger.error("Error generating RSA keys", e);
-            throw new JwtServiceException("Error generating RSA keys", e);
-        }
     }
 
 }
