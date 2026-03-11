@@ -20,6 +20,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -67,7 +68,7 @@ class ShoppingListControllerTest {
         shoppingList.setName("Weekly");
         shoppingList.setOwner(owner);
 
-        responseDTO = new ShoppingListResponseDTO(1L, "Weekly", new UserResponseDTO(1L, "Owner", "owner@example.com"));
+        responseDTO = new ShoppingListResponseDTO(1L, "Weekly", new UserResponseDTO(1L, "Owner", "owner@example.com"), BigDecimal.valueOf(1.0));
     }
 
     @Test

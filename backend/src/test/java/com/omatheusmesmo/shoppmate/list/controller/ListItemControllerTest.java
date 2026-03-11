@@ -19,6 +19,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -61,7 +62,7 @@ class ListItemControllerTest {
         listItem.setQuantity(2);
         listItem.setPurchased(false);
         summaryDTO = new ListItemSummaryDTO(1L, 1L, "Rice", 2, false);
-        responseDTO = new ListItemResponseDTO(null, null, 1L, 2, false);
+        responseDTO = new ListItemResponseDTO(null, null, 1L, 2, false, BigDecimal.valueOf(1.0), BigDecimal.valueOf(1.0));
     }
 
     @Test
@@ -78,7 +79,7 @@ class ListItemControllerTest {
     @Test
     @WithMockUser
     void addListItem() throws Exception {
-        ListItemRequestDTO requestDTO = new ListItemRequestDTO(1L, 1L, 2);
+        ListItemRequestDTO requestDTO = new ListItemRequestDTO(1L, 1L, 2,BigDecimal.valueOf(1.0));
         when(listItemService.addShoppItemList(any(ListItemRequestDTO.class))).thenReturn(listItem);
         when(listItemMapper.toResponseDTO(any(ListItem.class))).thenReturn(responseDTO);
 
