@@ -122,10 +122,7 @@ class JwtServiceTest {
 
     private JwtService createServiceWithExpiration(long expiration) {
         KeyPair keyPair = generateRSAKeys();
-        return new JwtService(
-                (RSAPublicKey) keyPair.getPublic(),
-                (RSAPrivateKey) keyPair.getPrivate(),
-                expiration);
+        return new JwtService((RSAPublicKey) keyPair.getPublic(), (RSAPrivateKey) keyPair.getPrivate(), expiration);
     }
 
     private KeyPair generateRSAKeys() {

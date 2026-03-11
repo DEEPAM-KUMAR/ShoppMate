@@ -71,8 +71,7 @@ class ListPermissionControllerTest {
         when(listPermissionService.findAllPermissionsByListId(1L)).thenReturn(List.of(listPermission));
         when(listPermissionMapper.toSummaryDTO(any(ListPermission.class))).thenReturn(summaryDTO);
 
-        mockMvc.perform(get("/lists/1/permissions"))
-                .andExpect(status().isOk())
+        mockMvc.perform(get("/lists/1/permissions")).andExpect(status().isOk())
                 .andExpect(content().json(objectMapper.writeValueAsString(List.of(summaryDTO))));
     }
 
@@ -83,10 +82,8 @@ class ListPermissionControllerTest {
         when(listPermissionService.addListPermission(any(ListPermissionRequestDTO.class))).thenReturn(listPermission);
         when(listPermissionMapper.toResponseDTO(any(ListPermission.class))).thenReturn(responseDTO);
 
-        mockMvc.perform(post("/lists/1/permissions")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(requestDTO)))
-                .andExpect(status().isCreated())
+        mockMvc.perform(post("/lists/1/permissions").contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(requestDTO))).andExpect(status().isCreated())
                 .andExpect(content().json(objectMapper.writeValueAsString(responseDTO)));
     }
 }

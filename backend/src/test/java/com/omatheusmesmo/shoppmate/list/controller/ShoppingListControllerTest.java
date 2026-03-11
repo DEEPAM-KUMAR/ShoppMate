@@ -68,7 +68,8 @@ class ShoppingListControllerTest {
         shoppingList.setName("Weekly");
         shoppingList.setOwner(owner);
 
-        responseDTO = new ShoppingListResponseDTO(1L, "Weekly", new UserResponseDTO(1L, "Owner", "owner@example.com"), BigDecimal.valueOf(1.0));
+        responseDTO = new ShoppingListResponseDTO(1L, "Weekly", new UserResponseDTO(1L, "Owner", "owner@example.com"),
+                BigDecimal.valueOf(1.0));
     }
 
     @Test
@@ -77,8 +78,7 @@ class ShoppingListControllerTest {
         when(shoppingListService.findAll()).thenReturn(List.of(shoppingList));
         when(listMapper.toResponseDTO(any(ShoppingList.class))).thenReturn(responseDTO);
 
-        mockMvc.perform(get("/lists"))
-                .andExpect(status().isOk())
+        mockMvc.perform(get("/lists")).andExpect(status().isOk())
                 .andExpect(content().json(objectMapper.writeValueAsString(List.of(responseDTO))));
     }
 
@@ -90,10 +90,8 @@ class ShoppingListControllerTest {
         when(shoppingListService.saveList(any(ShoppingList.class))).thenReturn(shoppingList);
         when(listMapper.toResponseDTO(any(ShoppingList.class))).thenReturn(responseDTO);
 
-        mockMvc.perform(post("/lists")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(requestDTO)))
-                .andExpect(status().isCreated())
+        mockMvc.perform(post("/lists").contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(requestDTO))).andExpect(status().isCreated())
                 .andExpect(content().json(objectMapper.writeValueAsString(responseDTO)));
     }
 }

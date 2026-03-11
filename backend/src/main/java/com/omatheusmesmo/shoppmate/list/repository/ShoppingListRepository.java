@@ -11,10 +11,10 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface ShoppingListRepository extends JpaRepository<ShoppingList, Long> {
 
-    @EntityGraph(attributePaths = {"owner"})
+    @EntityGraph(attributePaths = { "owner" })
     List<ShoppingList> findAll();
 
-    @EntityGraph(attributePaths = {"owner"})
+    @EntityGraph(attributePaths = { "owner" })
     Optional<ShoppingList> findByIdAndDeletedFalse(Long id);
 
 }

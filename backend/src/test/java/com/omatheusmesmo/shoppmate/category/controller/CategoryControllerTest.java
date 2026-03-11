@@ -66,8 +66,7 @@ class CategoryControllerTest {
         when(categoryService.findAll()).thenReturn(List.of(category));
         when(categoryMapper.toResponseDTO(any(Category.class))).thenReturn(categoryResponseDTO);
 
-        mockMvc.perform(get("/category"))
-                .andExpect(status().isOk())
+        mockMvc.perform(get("/category")).andExpect(status().isOk())
                 .andExpect(content().json(objectMapper.writeValueAsString(List.of(categoryResponseDTO))));
     }
 
@@ -79,10 +78,8 @@ class CategoryControllerTest {
         when(categoryService.saveCategory(any(Category.class))).thenReturn(category);
         when(categoryMapper.toResponseDTO(any(Category.class))).thenReturn(categoryResponseDTO);
 
-        mockMvc.perform(post("/category")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(requestDTO)))
-                .andExpect(status().isCreated())
+        mockMvc.perform(post("/category").contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(requestDTO))).andExpect(status().isCreated())
                 .andExpect(content().json(objectMapper.writeValueAsString(categoryResponseDTO)));
     }
 }

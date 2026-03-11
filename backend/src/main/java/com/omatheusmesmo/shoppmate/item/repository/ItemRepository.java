@@ -11,12 +11,12 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface ItemRepository extends JpaRepository<Item, Long> {
 
-    @EntityGraph(attributePaths = {"category", "unit"})
+    @EntityGraph(attributePaths = { "category", "unit" })
     List<Item> findAll();
 
-    @EntityGraph(attributePaths = {"category", "unit"})
+    @EntityGraph(attributePaths = { "category", "unit" })
     Optional<Item> findById(Long id);
 
-    @EntityGraph(attributePaths = {"category", "unit"})
+    @EntityGraph(attributePaths = { "category", "unit" })
     Optional<Item> findByIdAndDeletedFalse(Long id);
 }

@@ -56,8 +56,7 @@ class UserControllerTest {
     void getUsers() throws Exception {
         when(userService.findUsers()).thenReturn(List.of(user));
 
-        mockMvc.perform(get("/users/users"))
-                .andExpect(status().isOk())
+        mockMvc.perform(get("/users/users")).andExpect(status().isOk())
                 .andExpect(content().json(objectMapper.writeValueAsString(List.of(user))));
     }
 
@@ -66,8 +65,7 @@ class UserControllerTest {
     void getUserById() throws Exception {
         when(userService.findUser(1L)).thenReturn(user);
 
-        mockMvc.perform(get("/users/userDetailsService/1"))
-                .andExpect(status().isOk())
+        mockMvc.perform(get("/users/userDetailsService/1")).andExpect(status().isOk())
                 .andExpect(content().json(objectMapper.writeValueAsString(user)));
     }
 }

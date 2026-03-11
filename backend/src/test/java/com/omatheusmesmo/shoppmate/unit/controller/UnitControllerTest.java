@@ -59,8 +59,7 @@ class UnitControllerTest {
     void getAllUnits() throws Exception {
         when(unitService.findAll()).thenReturn(List.of(unit));
 
-        mockMvc.perform(get("/unit"))
-                .andExpect(status().isOk());
+        mockMvc.perform(get("/unit")).andExpect(status().isOk());
     }
 
     @Test
@@ -68,9 +67,8 @@ class UnitControllerTest {
     void addUnit() throws Exception {
         when(unitService.saveUnit(any(Unit.class))).thenReturn(unit);
 
-        mockMvc.perform(post("/unit")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(unit)))
+        mockMvc.perform(
+                post("/unit").contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(unit)))
                 .andExpect(status().isCreated());
     }
 
@@ -79,7 +77,6 @@ class UnitControllerTest {
     void deleteUnit() throws Exception {
         doNothing().when(unitService).removeUnitById(1L);
 
-        mockMvc.perform(delete("/unit/1"))
-                .andExpect(status().isNoContent());
+        mockMvc.perform(delete("/unit/1")).andExpect(status().isNoContent());
     }
 }

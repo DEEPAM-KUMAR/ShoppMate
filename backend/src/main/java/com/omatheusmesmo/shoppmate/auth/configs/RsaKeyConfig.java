@@ -24,10 +24,8 @@ public class RsaKeyConfig {
     @Bean
     public RSAPrivateKey privateKey() throws Exception {
         String key = new String(privateKeyResource.getInputStream().readAllBytes());
-        key = key
-                .replace("-----BEGIN PRIVATE KEY-----", "")
-                .replace("-----END PRIVATE KEY-----", "")
-                .replaceAll("\\s", "");
+        key = key.replace("-----BEGIN PRIVATE KEY-----", "").replace("-----END PRIVATE KEY-----", "").replaceAll("\\s",
+                "");
 
         byte[] decoded = Base64.getDecoder().decode(key);
         PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(decoded);
@@ -38,10 +36,8 @@ public class RsaKeyConfig {
     @Bean
     public RSAPublicKey publicKey() throws Exception {
         String key = new String(publicKeyResource.getInputStream().readAllBytes());
-        key = key
-                .replace("-----BEGIN PUBLIC KEY-----", "")
-                .replace("-----END PUBLIC KEY-----", "")
-                .replaceAll("\\s", "");
+        key = key.replace("-----BEGIN PUBLIC KEY-----", "").replace("-----END PUBLIC KEY-----", "").replaceAll("\\s",
+                "");
 
         byte[] decoded = Base64.getDecoder().decode(key);
         X509EncodedKeySpec keySpec = new X509EncodedKeySpec(decoded);

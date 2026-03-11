@@ -62,7 +62,8 @@ class ListItemControllerTest {
         listItem.setQuantity(2);
         listItem.setPurchased(false);
         summaryDTO = new ListItemSummaryDTO(1L, 1L, "Rice", 2, false);
-        responseDTO = new ListItemResponseDTO(null, null, 1L, 2, false, BigDecimal.valueOf(1.0), BigDecimal.valueOf(1.0));
+        responseDTO = new ListItemResponseDTO(null, null, 1L, 2, false, BigDecimal.valueOf(1.0),
+                BigDecimal.valueOf(1.0));
     }
 
     @Test
@@ -71,22 +72,19 @@ class ListItemControllerTest {
         when(listItemService.findAll(1L)).thenReturn(List.of(listItem));
         when(listItemMapper.toSummaryDTO(any(ListItem.class))).thenReturn(summaryDTO);
 
-        mockMvc.perform(get("/lists/1/items"))
-                .andExpect(status().isOk())
+        mockMvc.perform(get("/lists/1/items")).andExpect(status().isOk())
                 .andExpect(content().json(objectMapper.writeValueAsString(List.of(summaryDTO))));
     }
 
     @Test
     @WithMockUser
     void addListItem() throws Exception {
-        ListItemRequestDTO requestDTO = new ListItemRequestDTO(1L, 1L, 2,BigDecimal.valueOf(1.0));
+        ListItemRequestDTO requestDTO = new ListItemRequestDTO(1L, 1L, 2, BigDecimal.valueOf(1.0));
         when(listItemService.addShoppItemList(any(ListItemRequestDTO.class))).thenReturn(listItem);
         when(listItemMapper.toResponseDTO(any(ListItem.class))).thenReturn(responseDTO);
 
-        mockMvc.perform(post("/lists/1/items")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(requestDTO)))
-                .andExpect(status().isCreated())
+        mockMvc.perform(post("/lists/1/items").contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(requestDTO))).andExpect(status().isCreated())
                 .andExpect(content().json(objectMapper.writeValueAsString(responseDTO)));
     }
 }
